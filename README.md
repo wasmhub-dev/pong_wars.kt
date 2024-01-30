@@ -5,7 +5,7 @@
 Run:
 
 ```sh
-trunk serve
+./gradlew wasmJsBrowserRun
 ```
 
 ## Links
