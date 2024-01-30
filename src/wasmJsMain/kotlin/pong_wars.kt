@@ -1,3 +1,4 @@
+import kotlinx.browser.document
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLDivElement
@@ -15,12 +16,16 @@ const val DAY_BALL_COLOR = "#114C5A"
 const val NIGHT_COLOR = "#114C5A"
 const val NIGHT_BALL_COLOR = "#D9E8E3"
 
-class PongWars(private val canvas: HTMLCanvasElement, private val scoreElement: HTMLDivElement) {
-    private val ctx: CanvasRenderingContext2D = canvas.getContext("2d") as CanvasRenderingContext2D
-    private var numSquaresX: Int = canvas.width / SQUARE_SIZE
+class PongWars: Drawable {
 
-    private var numSquaresY: Int = canvas.height / SQUARE_SIZE
-    private var squares: Array<Array<String>> = Array(numSquaresX) { Array(numSquaresY) { DAY_COLOR } }
+    private val canvas: HTMLCanvasElement = document.getElementById("pongCanvas") as HTMLCanvasElement
+    private val scoreElement = document.getElementById("score") as HTMLDivElement
+    private val ctx: CanvasRenderingContext2D = canvas.getContext("2d") as CanvasRenderingContext2D
+
+    private val numSquaresX: Int = canvas.width / SQUARE_SIZE
+    private val numSquaresY: Int = canvas.height / SQUARE_SIZE
+
+    private val squares: Array<Array<String>> = Array(numSquaresX) { Array(numSquaresY) { DAY_COLOR } }
 
     private var x1: Float
     private var y1: Float
@@ -134,7 +139,7 @@ class PongWars(private val canvas: HTMLCanvasElement, private val scoreElement: 
     }
 
 
-    fun draw() {
+    override fun draw() {
         ctx.clearRect(0.0, 0.0, canvas.width.toDouble(), canvas.height.toDouble())
         drawSquares()
         drawBall(x1, y1, DAY_BALL_COLOR)
