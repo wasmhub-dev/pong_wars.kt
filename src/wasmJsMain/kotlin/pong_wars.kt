@@ -40,7 +40,9 @@ class PongWars: Drawable {
     init {
         for (i in 0..<numSquaresX) {
             for (j in 0..<numSquaresY) {
-                squares[i][j] = if (i < numSquaresX / 2) DAY_COLOR else NIGHT_COLOR
+                if (i >= numSquaresX / 2) {
+                    squares[i][j] = NIGHT_COLOR
+                }
             }
         }
         x1 = canvas.width / 4f

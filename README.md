@@ -13,4 +13,4 @@ Run:
 
 ## Links
 
-- Original: https://github.com/vnglst/pong-wars.kt
+- Original: https://github.com/vnglst/pong-wars
