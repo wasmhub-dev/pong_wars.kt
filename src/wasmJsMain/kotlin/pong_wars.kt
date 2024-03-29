@@ -2,10 +2,8 @@ import kotlinx.browser.document
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLDivElement
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
+import kotlin.math.*
+import kotlin.random.Random
 
 
 const val SQUARE_SIZE = 25
@@ -15,6 +13,11 @@ const val DAY_BALL_COLOR = "#114C5A"
 
 const val NIGHT_COLOR = "#114C5A"
 const val NIGHT_BALL_COLOR = "#D9E8E3"
+
+const val MIN_SPEED = 5f
+const val MAX_SPEED = 10f
+
+class Ball(var x: Float, var y: Float, var dx: Float, var dy: Float, val reverseColor: String = DAY_COLOR, val ballColor: String = DAY_BALL_COLOR)
 
 class PongWars: Drawable {
 
@@ -27,15 +30,10 @@ class PongWars: Drawable {
 
     private val squares: Array<Array<String>> = Array(numSquaresX) { Array(numSquaresY) { DAY_COLOR } }
 
-    private var x1: Float
-    private var y1: Float
-    private var dx1: Float
-    private var dy1: Float
-
-    private var x2: Float
-    private var y2: Float
-    private var dx2: Float
-    private var dy2: Float
+    private val balls: List<Ball> = listOf(
+        Ball(canvas.width / 4f, canvas.height / 2f, 12.5f, -12.5f, DAY_COLOR, DAY_BALL_COLOR),
+        Ball(canvas.width / 4f * 3, canvas.height / 2f, -12.5f, 12.5f, NIGHT_COLOR, NIGHT_BALL_COLOR)
+    )
 
     init {
         for (i in 0..<numSquaresX) {
@@ -45,20 +43,12 @@ class PongWars: Drawable {
                 }
             }
         }
-        x1 = canvas.width / 4f
-        y1 = canvas.height / 2f
-        dx1 = 12.5f
-        dy1 = -12.5f
-        x2 = canvas.width / 4f * 3
-        y2 = canvas.height / 2f
-        dx2 = -12.5f
-        dy2 = 12.5f
     }
 
-    private fun drawBall(x: Float, y: Float, color: String) {
+    private fun drawBall(ball: Ball) {
         ctx.beginPath()
-        ctx.arc(x.toDouble(), y.toDouble(), (SQUARE_SIZE / 2f).toDouble(), 0.0, 2 * PI)
-        ctx.fillStyle = color.toJsString()
+        ctx.arc(ball.x.toDouble(), ball.y.toDouble(), (SQUARE_SIZE / 2f).toDouble(), 0.0, 2 * PI)
+        ctx.fillStyle = ball.ballColor.toJsString()
         ctx.fill()
         ctx.closePath()
     }
@@ -78,26 +68,23 @@ class PongWars: Drawable {
     }
 
 
-    private fun updateSquareAndBounce(x: Float, y: Float, dx: Float, dy: Float, color: String): Pair<Float, Float> {
-        var updatedDx = dx
-        var updatedDy = dy
-
+    private fun checkSquareCollision(ball: Ball) {
         var angle = 0.0
         while (angle < PI * 2) {
 
-            val checkX = x + cos(angle) * SQUARE_SIZE / 2f
-            val checkY = y + sin(angle) * SQUARE_SIZE / 2f
+            val checkX = ball.x + cos(angle) * SQUARE_SIZE / 2f
+            val checkY = ball.y + sin(angle) * SQUARE_SIZE / 2f
             val i = (checkX / SQUARE_SIZE).toInt()
             val j = (checkY / SQUARE_SIZE).toInt()
 
             if (i in 0..< numSquaresX && j in 0..< numSquaresY) {
-                if (squares[i][j] !== color) {
-                    squares[i][j] = color
+                if (squares[i][j] !== ball.reverseColor) {
+                    squares[i][j] = ball.reverseColor
 
                     if (abs(cos(angle)) > abs(sin(angle))) {
-                        updatedDx = -updatedDx
+                        ball.dx = -ball.dx
                     } else {
-                        updatedDy = -updatedDy
+                        ball.dy = -ball.dy
                     }
                 }
 
@@ -105,8 +92,6 @@ class PongWars: Drawable {
 
             angle += PI / 4f
         }
-
-        return Pair(updatedDx, updatedDy)
     }
 
     private fun updateScoreElement() {
@@ -125,48 +110,50 @@ class PongWars: Drawable {
         scoreElement.textContent = "day $dayScore | night $nightScore"
     }
 
-    private fun checkBoundaryCollision(x: Float, y: Float, dx: Float, dy: Float): Pair<Float, Float> {
-        var updatedDx = dx
-        var updatedDy = dy
-        if (x + dx > canvas.width - SQUARE_SIZE / 2f || x + dx < SQUARE_SIZE / 2f) {
-            updatedDx = -dx
+    private fun checkBoundaryCollision(ball: Ball) {
+        if (ball.x + ball.dx > canvas.width - SQUARE_SIZE / 2f || ball.x + ball.dx < SQUARE_SIZE / 2f) {
+            ball.dx = -ball.dx
         }
 
-        if (y + dy > canvas.height - SQUARE_SIZE / 2f || y + dy < SQUARE_SIZE / 2f) {
-            updatedDy = -dy
+        if (ball.y + ball.dy > canvas.height - SQUARE_SIZE / 2f || ball.y + ball.dy < SQUARE_SIZE / 2f) {
+            ball.dy = -ball.dy
+        }
+    }
+
+    private fun addRandomness(ball: Ball) {
+        ball.dx += (Random.nextInt(0, 100) / 100f) * 0.01f - 0.005f
+        ball.dy += (Random.nextInt(0, 100) / 100f) * 0.01f - 0.005f
+
+        ball.dx = min(max(ball.dx, -MAX_SPEED), MAX_SPEED)
+        ball.dy = min(max(ball.dy, -MAX_SPEED), MAX_SPEED)
+
+        if (abs(ball.dx) < MIN_SPEED) {
+            ball.dx = if (ball.dx > 0) MIN_SPEED else -MIN_SPEED
         }
 
-        return Pair(updatedDx, updatedDy)
-
+        if (abs(ball.dy) < MIN_SPEED) {
+            ball.dy = if (ball.dy > 0) MIN_SPEED else -MIN_SPEED
+        }
     }
 
 
     override fun draw() {
         ctx.clearRect(0.0, 0.0, canvas.width.toDouble(), canvas.height.toDouble())
         drawSquares()
-        drawBall(x1, y1, DAY_BALL_COLOR)
-        val bounce1 = updateSquareAndBounce(x1, y1, dx1, dy1, DAY_COLOR)
-        dx1 = bounce1.first
-        dy1 = bounce1.second
-
-        drawBall(x2, y2, NIGHT_BALL_COLOR)
-        val bounce2 = updateSquareAndBounce(x2, y2, dx2, dy2, NIGHT_COLOR)
-        this.dx2 = bounce2.first
-        this.dy2 = bounce2.second
-
-        val boundary1 = checkBoundaryCollision(x1, y1, dx1, dy1)
-        dx1 = boundary1.first
-        dy1 = boundary1.second
-
-        val boundary2 = checkBoundaryCollision(x2, y2, dx2, dy2)
-        dx2 = boundary2.first
-        dy2 = boundary2.second
-
-        x1 += dx1
-        y1 += dy1
-        x2 += dx2
-        y2 += dy2
 
         updateScoreElement()
+
+        balls.forEach { ball ->
+            drawBall(ball)
+
+            checkSquareCollision(ball)
+            checkBoundaryCollision(ball)
+            addRandomness(ball)
+
+            ball.x += ball.dx
+            ball.y += ball.dy
+
+            addRandomness(ball)
+        }
     }
 }

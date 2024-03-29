@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
-    kotlin("multiplatform") version "2.0.0-Beta4"
+    kotlin("multiplatform") version "2.0.0-Beta5"
 }
 
 group = "dev.wasmhub"
