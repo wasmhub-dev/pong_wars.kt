@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
-    kotlin("multiplatform") version "2.0.20-Beta1"
+    kotlin("multiplatform") version "2.0.20-RC"
 }
 
 group = "dev.wasmhub"
@@ -13,7 +13,7 @@ repositories {
 }
 
 kotlin {
-    @OptIn(ExperimentalWasmDsl::class)
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
         binaries.executable()
         browser {
